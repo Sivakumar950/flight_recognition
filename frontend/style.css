@@ -400,19 +400,16 @@ body {
   height: 18px;
 }
 
-.btn-loading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.spinner {
+.btn-loading .spinner {
   width: 18px;
   height: 18px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
 }
 
 @keyframes spin {
@@ -524,24 +521,22 @@ body {
   height: 100%;
   border-radius: 100px;
   transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 0 12px rgba(0, 230, 118, 0.3);
+  width: 0%;
 }
 
 .confidence-value {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 800;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
 }
 
-.confidence-label {
+.confidence-tag {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   opacity: 0.7;
+  margin-left: 8px;
 }
 
 /* ===== HISTORY HINT ===== */

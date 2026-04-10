@@ -9,9 +9,136 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+  <div class="app">
+    <!-- Animated background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 4L28 14L24 16L16 28L8 16L4 14L16 4Z" fill="url(#grad)" />
+              <path d="M16 4L28 14L16 12L4 14L16 4Z" fill="rgba(255,255,255,0.3)" />
+              <defs>
+                <linearGradient id="grad" x1="4" y1="4" x2="28" y2="28">
+                  <stop stop-color="#6366f1" />
+                  <stop offset="1" stop-color="#06b6d4" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <span class="logo-text">FlightRec</span>
+        </div>
+        <p class="tagline">AI-Powered Aircraft Recognition</p>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="container">
+        <!-- Hero -->
+        <div class="hero">
+          <h1 class="hero-title">
+            Identify Any Aircraft<br />
+            <span class="hero-gradient">In Seconds</span>
+          </h1>
+          <p class="hero-sub">
+            Upload an image and our AI will identify the aircraft type, airline, and provide a confidence score.
+          </p>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="card upload-card">
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-content" id="drop-content">
+              <div class="drop-icon">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M24 8V32M24 8L16 16M24 8L32 16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M8 28V36C8 38.2091 9.79086 40 12 40H36C38.2091 40 40 38.2091 40 36V28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <p class="drop-title">Drop your aircraft image here</p>
+              <p class="drop-sub">or click to browse · PNG, JPG, WEBP up to 10MB</p>
+            </div>
+            <div class="preview-container" id="preview-container" style="display:none;">
+              <img id="preview-img" class="preview-img" alt="Aircraft preview" />
+              <div class="preview-overlay"><span>Click or drop to replace</span></div>
+            </div>
+            <input type="file" accept="image/*" id="file-input" class="file-input" />
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" id="analyze-btn" disabled>
+              <svg viewBox="0 0 20 20" fill="currentColor" class="btn-icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+              </svg>
+              <span id="btn-text">Analyze Aircraft</span>
+            </button>
+            <button class="btn btn-ghost" id="reset-btn" style="display:none;">Reset</button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="card error-card" id="error-card" style="display:none;">
+          <div class="error-icon">⚠</div>
+          <p id="error-msg"></p>
+        </div>
+
+        <!-- Results -->
+        <div class="card results-card" id="results-card" style="display:none;">
+          <h2 class="results-title">
+            <svg viewBox="0 0 20 20" fill="currentColor" class="results-icon">
+              <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            Identification Results
+          </h2>
+          <div class="results-grid">
+            <div class="result-item">
+              <span class="result-label">Aircraft Type</span>
+              <span class="result-value" id="result-aircraft">—</span>
+            </div>
+            <div class="result-item">
+              <span class="result-label">Airline</span>
+              <span class="result-value" id="result-airline">—</span>
+            </div>
+            <div class="result-item result-confidence">
+              <span class="result-label">Confidence</span>
+              <div class="confidence-display">
+                <div class="confidence-bar-bg">
+                  <div class="confidence-bar-fill" id="confidence-bar"></div>
+                </div>
+                <span class="confidence-value" id="confidence-value">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="history-hint" id="history-hint" style="display:none;">
+          Result has been saved to your prediction history.
+        </p>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>FlightRec &copy; <span id="year"></span> &middot; Powered by Amazon Bedrock</p>
+    </footer>
+  </div>
+
+  <!--
+    config.js is git-ignored and contains your API URL.
+    It must define: window.FLIGHTREC_CONFIG = { API_URL: "..." }
+    See config.example.js for the template.
+  -->
+  <script src="config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

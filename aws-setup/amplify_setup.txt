@@ -1,10 +1,14 @@
 ================================================================
-  AWS AMPLIFY SETUP — FRONTEND HOSTING
+  AWS AMPLIFY SETUP — FRONTEND HOSTING (STATIC HTML)
 ================================================================
 
 PREREQUISITES:
   - GitHub repository with your frontend code pushed
   - AWS account with Amplify access
+
+NOTE:
+  Since the frontend is now plain HTML/CSS/JS (no build step),
+  Amplify simply serves static files.
 
 STEPS:
 
@@ -13,38 +17,39 @@ STEPS:
 3. Select "GitHub" as source provider
 4. Authorize AWS Amplify to access your GitHub account
 5. Choose your repository and branch (e.g., main)
-6. Amplify auto-detects Vite/React — verify build settings:
+6. Configure build settings:
 
    Build settings:
    ┌──────────────────────────────────────────┐
    │ version: 1                               │
    │ frontend:                                │
    │   phases:                                │
-   │     preBuild:                            │
-   │       commands:                          │
-   │         - cd frontend                    │
-   │         - npm ci                         │
    │     build:                               │
-   │       commands:                          │
-   │         - npm run build                  │
+   │       commands: []                       │
    │   artifacts:                             │
-   │     baseDirectory: frontend/dist         │
+   │     baseDirectory: frontend              │
    │     files:                               │
    │       - '**/*'                           │
-   │   cache:                                 │
-   │     paths:                               │
-   │       - frontend/node_modules/**/*       │
+   │       - '!config.js'                     │
    └──────────────────────────────────────────┘
 
+   (No build commands needed — just serve the frontend/ folder)
+
 7. Click "Save and deploy"
-8. Wait for build + deploy to complete (2-5 minutes)
+8. Wait for deploy to complete (1-2 minutes)
 9. Copy the Amplify URL (e.g., https://main.abc123.amplifyapp.com)
 
-AFTER DEPLOYMENT:
-  - Update src/App.jsx:
-    Change API_URL from '/predict' to your full API Gateway URL
-    Example: 'https://abc123.execute-api.us-east-1.amazonaws.com/prod/predict'
-  - Push the change to trigger a new Amplify build
+IMPORTANT — API CONFIG:
+  config.js is git-ignored, so it won't be deployed automatically.
+  You need to set the API URL using Amplify Environment Variables:
+
+  Option A: Create config.js in Amplify Rewrites/Redirects
+  Option B: Use Amplify's "Customization" → add a build command:
+    echo 'window.FLIGHTREC_CONFIG={API_URL:"YOUR_URL"};' > frontend/config.js
+
+  The simplest approach: after deploy, go to Amplify Console →
+  App settings → Build settings → Edit, and add a preBuild command:
+    - echo 'window.FLIGHTREC_CONFIG={API_URL:"https://YOUR_API_GATEWAY_URL/prod/predict"};' > config.js
 
 CUSTOM DOMAIN (optional):
   1. In Amplify console → Domain management

@@ -6,7 +6,7 @@ Step-by-step guide for connecting all components end-to-end.
 
 ## 1. Frontend → API Gateway
 
-**How it works:** The React app sends a POST request with the base64-encoded image to API Gateway.
+**How it works:** The static frontend sends a POST request with the base64-encoded image to API Gateway.
 
 ### Setup:
 1. Deploy API Gateway (see `aws-setup/api_gateway_setup.txt`)
@@ -14,21 +14,19 @@ Step-by-step guide for connecting all components end-to-end.
    ```
    https://abc123.execute-api.us-east-1.amazonaws.com/prod
    ```
-3. Update `frontend/src/App.jsx`:
+3. Update `frontend/config.js`:
    ```js
-   // Change this line:
-   const API_URL = '/predict'
-   
-   // To your API Gateway URL:
-   const API_URL = 'https://abc123.execute-api.us-east-1.amazonaws.com/prod/predict'
+   window.FLIGHTREC_CONFIG = {
+     API_URL: "https://abc123.execute-api.us-east-1.amazonaws.com/prod/predict"
+   };
    ```
-4. Rebuild and redeploy the frontend
+4. Redeploy the frontend
 
 ### Request Flow:
 ```
 User clicks "Analyze Aircraft"
-  → Image converted to base64
-  → POST request to API_URL
+  → Image converted to base64 (via FileReader API)
+  → POST request to API_URL (via fetch)
   → Body: { "image": "base64string..." }
   → Content-Type: application/json
 ```
@@ -60,40 +58,29 @@ User clicks "Analyze Aircraft"
 
 ---
 
-## 3. Lambda → Bedrock
+## 3. Lambda → Bedrock (Llama 3.2 Vision)
 
-**How it works:** Lambda sends the base64 image to Claude 3 Sonnet via the Bedrock Runtime API using boto3.
+**How it works:** Lambda sends the base64 image to Meta Llama 3.2 90B Vision via Bedrock using boto3.
 
-### Request Format (Claude 3 Messages API):
+### Model:
+- **Model ID:** `us.meta.llama3-2-90b-instruct-v1:0`
+- **Provider:** Meta
+- **Type:** Multimodal (text + image)
+
+### Request Format:
 ```json
 {
-  "anthropic_version": "bedrock-2023-05-31",
-  "max_tokens": 256,
-  "messages": [
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "image",
-          "source": {
-            "type": "base64",
-            "media_type": "image/jpeg",
-            "data": "<base64-image-data>"
-          }
-        },
-        {
-          "type": "text",
-          "text": "Analyze this aircraft image..."
-        }
-      ]
-    }
-  ]
+  "prompt": "<|begin_of_text|><|start_header_id|>user<|end_header_id|>...",
+  "images": ["<base64-image-data>"],
+  "max_gen_len": 256,
+  "temperature": 0.1,
+  "top_p": 0.9
 }
 ```
 
 ### Response Parsing:
-- Bedrock returns Claude's response in `content[0].text`
-- Lambda extracts the JSON string from that text
+- Bedrock returns the response in `generation` field
+- Lambda extracts JSON from the generated text
 - Parses it into: `{ aircraft_type, airline, confidence }`
 
 ### Fallback:
@@ -132,7 +119,7 @@ Follow this exact order:
 2. Enable Bedrock model access   → aws-setup/bedrock_setup.txt
 3. Package & deploy Lambda       → aws-setup/lambda_setup.txt
 4. Create API Gateway            → aws-setup/api_gateway_setup.txt
-5. Update frontend API URL       → Update App.jsx
+5. Update frontend config.js     → Set API_URL
 6. Deploy frontend to Amplify    → aws-setup/amplify_setup.txt
 ```
 
@@ -141,9 +128,9 @@ Follow this exact order:
 ## 6. Testing Checklist
 
 - [ ] DynamoDB table `AircraftPredictions` exists and is Active
-- [ ] Bedrock Claude 3 Sonnet access is granted
+- [ ] Bedrock Llama 3.2 90B Vision access is granted
 - [ ] Lambda test event returns a valid JSON response
 - [ ] API Gateway POST /predict returns 200 with JSON
-- [ ] Frontend loads at Amplify URL
+- [ ] Frontend loads (open index.html or via static server)
 - [ ] Uploading an image shows prediction results
 - [ ] DynamoDB has new records after predictions
