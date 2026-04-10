@@ -58,28 +58,33 @@ User clicks "Analyze Aircraft"
 
 ---
 
-## 3. Lambda → Bedrock (Llama 3.2 Vision)
+## 3. Lambda → Bedrock (Amazon Nova Lite)
 
-**How it works:** Lambda sends the base64 image to Meta Llama 3.2 90B Vision via Bedrock using boto3.
+**How it works:** Lambda sends the base64 image to Amazon Nova Lite via the Bedrock Converse API using boto3.
 
 ### Model:
-- **Model ID:** `us.meta.llama3-2-90b-instruct-v1:0`
-- **Provider:** Meta
-- **Type:** Multimodal (text + image)
+- **Model ID:** `amazon.nova-lite-v1:0`
+- **Provider:** Amazon (1st party, available by default — no access request needed)
+- **Type:** Multimodal (text + image + video)
+- **API:** Converse API (recommended)
 
-### Request Format:
-```json
-{
-  "prompt": "<|begin_of_text|><|start_header_id|>user<|end_header_id|>...",
-  "images": ["<base64-image-data>"],
-  "max_gen_len": 256,
-  "temperature": 0.1,
-  "top_p": 0.9
-}
+### Request (Converse API):
+```python
+bedrock.converse(
+    modelId="amazon.nova-lite-v1:0",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"image": {"format": "jpeg", "source": {"bytes": image_bytes}}},
+            {"text": "Analyze this aircraft image..."}
+        ]
+    }],
+    inferenceConfig={"maxTokens": 256, "temperature": 0.1}
+)
 ```
 
 ### Response Parsing:
-- Bedrock returns the response in `generation` field
+- Converse API returns `output.message.content[0].text`
 - Lambda extracts JSON from the generated text
 - Parses it into: `{ aircraft_type, airline, confidence }`
 
@@ -116,7 +121,7 @@ Follow this exact order:
 
 ```
 1. Create DynamoDB table         → aws-setup/dynamodb_setup.txt
-2. Enable Bedrock model access   → aws-setup/bedrock_setup.txt
+2. Verify Bedrock access          → aws-setup/bedrock_setup.txt
 3. Package & deploy Lambda       → aws-setup/lambda_setup.txt
 4. Create API Gateway            → aws-setup/api_gateway_setup.txt
 5. Update frontend config.js     → Set API_URL
@@ -128,7 +133,7 @@ Follow this exact order:
 ## 6. Testing Checklist
 
 - [ ] DynamoDB table `AircraftPredictions` exists and is Active
-- [ ] Bedrock Llama 3.2 90B Vision access is granted
+- [ ] Amazon Nova Lite works in Bedrock Playground
 - [ ] Lambda test event returns a valid JSON response
 - [ ] API Gateway POST /predict returns 200 with JSON
 - [ ] Frontend loads (open index.html or via static server)

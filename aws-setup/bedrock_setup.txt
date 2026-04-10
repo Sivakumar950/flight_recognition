@@ -1,49 +1,57 @@
 ================================================================
-  BEDROCK SETUP — AI MODEL ACCESS (LLAMA 3.2 VISION)
+  BEDROCK SETUP — AI MODEL ACCESS (AMAZON NOVA LITE)
 ================================================================
 
-PREREQUISITES:
-  - AWS account in a region that supports Bedrock
-  - Supported regions: us-east-1, us-west-2
+IMPORTANT:
+  As of Oct 2025, AWS retired the manual "Model access" dashboard.
+  Most serverless models (including Amazon Nova) are now ENABLED
+  BY DEFAULT — no access request needed!
 
-ENABLE MODEL ACCESS:
+MODEL USED:
+  - Model ID: amazon.nova-lite-v1:0
+  - Provider: Amazon (1st party)
+  - Supports: Multimodal (text + image + video)
+  - API: Converse API (recommended)
+  - Available by default: ✅ YES
+
+VERIFY IT WORKS:
 
 1. Go to AWS Console → Amazon Bedrock
-2. In the left sidebar, click "Model access"
-3. Click "Manage model access" (or "Modify model access")
-4. Find "Meta" section
-5. Check ✅ "Llama 3.2 90B Vision Instruct"
-   (Model ID: us.meta.llama3-2-90b-instruct-v1:0)
-6. Click "Request model access"
-7. Accept the End User License Agreement (EULA)
-8. Wait for status to show "Access granted"
-   (May take a few minutes for Llama models)
+2. In the left sidebar → "Chat" under "Playgrounds"
+3. Select model: Amazon Nova Lite
+4. Upload a test aircraft image
+5. Type: "What aircraft is in this image?"
+6. Verify you get a response
 
-VERIFY ACCESS:
+   If the model works in the playground, it will work in Lambda.
 
-9. In Bedrock console → left sidebar → "Chat" under "Playgrounds"
-10. Select model: Llama 3.2 90B Vision Instruct
-11. Upload a test aircraft image
-12. Type: "What aircraft is in this image?"
-13. Verify you get a response
+REGION AVAILABILITY:
+  Amazon Nova Lite is available in:
+    - us-east-1 (N. Virginia)
+    - us-west-2 (Oregon)
+    - And other major regions
 
-MODEL DETAILS:
-  - Model ID: us.meta.llama3-2-90b-instruct-v1:0
-  - Supports: Multimodal (text + image)
-  - Input: Base64 image + text prompt
-  - Max tokens: 256 (configured in Lambda)
-  - Provider: Meta
+  Ensure your Lambda function is in a region where Nova is available.
+  The Lambda code uses us-east-1 by default.
+  If using a different region, update region in lambda_function.py.
 
-REGION NOTE:
-  - Ensure your Lambda function is in the SAME REGION as Bedrock
-  - The Lambda code uses us-east-1 by default
-  - If using a different region, update region in lambda_function.py
+ALTERNATIVE MODELS (also default-available):
+  - Amazon Nova Pro: amazon.nova-pro-v1:0
+    (More capable, higher cost, also multimodal)
+  - Amazon Nova Micro: amazon.nova-micro-v1:0
+    (Text-only, does NOT support images)
 
-ALTERNATIVE MODELS (if Llama 3.2 90B unavailable):
-  - Llama 3.2 11B Vision: us.meta.llama3-2-11b-instruct-v1:0 (smaller/faster)
-  - To switch: update BEDROCK_MODEL_ID in lambda_function.py
+  To switch to Nova Pro: update BEDROCK_MODEL_ID in lambda_function.py
+
+IAM PERMISSIONS:
+  Your Lambda execution role needs:
+    - bedrock:InvokeModel (for invoke_model API)
+    - bedrock:Converse (for converse API — this is what we use)
+
+  The managed policy "AmazonBedrockFullAccess" covers both.
 
 TROUBLESHOOTING:
-  - "Access denied": Model access not yet granted — check step 8
-  - "Model not found": Wrong region — verify Lambda region matches
+  - "Access denied": Check IAM permissions on Lambda role
+  - "Model not found": Verify region supports Amazon Nova
+  - "Validation error": Ensure image is valid base64 JPEG/PNG
   - Lambda timeout: Increase Lambda timeout to 60+ seconds

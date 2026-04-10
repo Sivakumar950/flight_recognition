@@ -1,5 +1,6 @@
 import json
 import uuid
+import base64
 import boto3
 from datetime import datetime, timezone
 
@@ -9,8 +10,9 @@ dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table = dynamodb.Table("AircraftPredictions")
 
 # ─── Config ───
-# Meta Llama 3.2 90B Vision Instruct (multimodal — supports images)
-BEDROCK_MODEL_ID = "us.meta.llama3-2-90b-instruct-v1:0"
+# Amazon Nova Lite — multimodal (text + image), available by default in Bedrock
+# No model access request needed.
+BEDROCK_MODEL_ID = "amazon.nova-lite-v1:0"
 
 # ─── CORS Headers ───
 CORS_HEADERS = {
@@ -27,7 +29,7 @@ def lambda_handler(event, context):
 
     Flow:
       1. Receives base64 image from API Gateway
-      2. Sends image to Amazon Bedrock (Llama 3.2 Vision) for identification
+      2. Sends image to Amazon Bedrock (Nova Lite) for identification
       3. Stores result metadata in DynamoDB
       4. Returns aircraft_type, airline, confidence to frontend
     """
@@ -72,48 +74,59 @@ def lambda_handler(event, context):
 
 
 def call_bedrock(base64_image: str) -> dict:
-    """Calls Amazon Bedrock Llama 3.2 Vision with the aircraft image."""
+    """Calls Amazon Bedrock Nova Lite using the Converse API with the aircraft image."""
     try:
-        # Llama 3.2 Vision uses the Converse API for multimodal input
-        request_body = json.dumps({
-            "prompt": (
-                "<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n"
-                "Analyze this aircraft image. Identify the aircraft and respond "
-                "ONLY with a JSON object (no markdown, no explanation, no extra text) in this "
-                "exact format:\n"
-                '{"aircraft_type": "<model name>", "airline": "<airline name or Unknown>", '
-                '"confidence": "<number 0-100>"}\n'
-                "If you cannot identify the aircraft, still respond with the JSON "
-                "format using your best guess."
-                "<|eot_id|>"
-                "<|start_header_id|>assistant<|end_header_id|>\n\n"
-            ),
-            "images": [base64_image],
-            "max_gen_len": 256,
-            "temperature": 0.1,
-            "top_p": 0.9,
-        })
+        # Decode the base64 image into bytes for the Converse API
+        image_bytes = base64.b64decode(base64_image)
 
-        response = bedrock.invoke_model(
+        # Use the Converse API (recommended for Amazon Nova models)
+        response = bedrock.converse(
             modelId=BEDROCK_MODEL_ID,
-            contentType="application/json",
-            accept="application/json",
-            body=request_body,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "image": {
+                                "format": "jpeg",
+                                "source": {
+                                    "bytes": image_bytes
+                                }
+                            }
+                        },
+                        {
+                            "text": (
+                                "Analyze this aircraft image. Identify the aircraft and respond "
+                                "ONLY with a JSON object (no markdown, no explanation, no extra text) "
+                                "in this exact format:\n"
+                                '{"aircraft_type": "<model name>", "airline": "<airline name or Unknown>", '
+                                '"confidence": "<number 0-100>"}\n'
+                                "If you cannot identify the aircraft, still respond with the JSON "
+                                "format using your best guess."
+                            )
+                        }
+                    ]
+                }
+            ],
+            inferenceConfig={
+                "maxTokens": 256,
+                "temperature": 0.1,
+                "topP": 0.9,
+            }
         )
 
-        response_body = json.loads(response["body"].read())
-        generated_text = response_body.get("generation", "").strip()
+        # Parse the Converse API response
+        output_message = response["output"]["message"]
+        generated_text = output_message["content"][0]["text"].strip()
         print(f"Bedrock response: {generated_text}")
 
         # Extract JSON from the response
-        # Try to find a JSON object in the generated text
         start = generated_text.find("{")
         end = generated_text.rfind("}") + 1
         if start != -1 and end > start:
             json_str = generated_text[start:end]
             return json.loads(json_str)
 
-        # If no valid JSON found, raise to fall through to mock
         raise ValueError("No valid JSON in Bedrock response")
 
     except Exception as e:

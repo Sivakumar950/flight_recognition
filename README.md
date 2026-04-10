@@ -5,7 +5,7 @@ AI-powered aircraft identification using Amazon Bedrock. Upload an aircraft imag
 ## Architecture
 
 ```
-HTML/CSS/JS  →  API Gateway  →  Lambda (Python)  →  Bedrock (Llama 3.2 Vision)
+HTML/CSS/JS  →  API Gateway  →  Lambda (Python)  →  Bedrock (Amazon Nova Lite)
                                        ↓
                                    DynamoDB
 ```
@@ -76,7 +76,7 @@ A template `config.example.js` is committed so collaborators know the format.
 ## Deployment Order
 
 1. Create DynamoDB table → `aws-setup/dynamodb_setup.txt`
-2. Enable Bedrock access → `aws-setup/bedrock_setup.txt`
+2. Verify Bedrock access → `aws-setup/bedrock_setup.txt`
 3. Deploy Lambda → `aws-setup/lambda_setup.txt`
 4. Create API Gateway → `aws-setup/api_gateway_setup.txt`
 5. Update `frontend/config.js` with API URL
@@ -91,7 +91,7 @@ See [INTEGRATION.md](INTEGRATION.md) for detailed wiring instructions.
 | Frontend  | HTML, CSS, Vanilla JavaScript             |
 | API       | Amazon API Gateway (REST)                 |
 | Backend   | AWS Lambda (Python 3.12)                  |
-| AI        | Amazon Bedrock (Meta Llama 3.2 90B Vision)|
+| AI        | Amazon Bedrock (Amazon Nova Lite)          |
 | Database  | Amazon DynamoDB                           |
 | Hosting   | AWS Amplify                               |
 
