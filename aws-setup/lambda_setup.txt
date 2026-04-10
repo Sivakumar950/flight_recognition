@@ -1,0 +1,76 @@
+================================================================
+  LAMBDA SETUP — PYTHON FUNCTION
+================================================================
+
+PREREQUISITES:
+  - AWS account with Lambda access
+  - lambda_function.py ready (in the lambda/ folder)
+
+PACKAGE THE FUNCTION:
+  1. The function uses only boto3 (pre-installed in Lambda runtime)
+  2. Zip the file:
+     - On Windows: Right-click lambda_function.py → Send to → Compressed (zipped) folder
+     - Or via terminal:
+       cd lambda
+       Compress-Archive -Path lambda_function.py -DestinationPath lambda_function.zip
+     - On Mac/Linux:
+       cd lambda
+       zip lambda_function.zip lambda_function.py
+
+CREATE LAMBDA FUNCTION:
+  1. Go to AWS Console → Lambda
+  2. Click "Create function"
+  3. Choose "Author from scratch"
+  4. Settings:
+     - Function name: FlightRecHandler
+     - Runtime: Python 3.12
+     - Architecture: x86_64
+     - Execution role: Create a new role with basic Lambda permissions
+  5. Click "Create function"
+
+UPLOAD THE CODE:
+  6. In the function page → Code tab
+  7. Click "Upload from" → ".zip file"
+  8. Upload: lambda_function.zip
+  9. Click "Save"
+  (Alternatively, paste the code directly in the inline editor)
+
+VERIFY HANDLER:
+  10. In the Code tab → Runtime settings → Click "Edit"
+  11. Handler: lambda_function.lambda_handler
+  12. Click "Save"
+
+CONFIGURE SETTINGS:
+  13. Go to Configuration → General configuration → Edit
+  14. Memory: 256 MB
+  15. Timeout: 60 seconds (Bedrock may take time)
+  16. Click "Save"
+
+SET UP IAM PERMISSIONS:
+  17. Go to Configuration → Permissions
+  18. Click the execution role name (opens IAM console)
+  19. Click "Add permissions" → "Attach policies"
+  20. Add these managed policies:
+      - AmazonDynamoDBFullAccess
+      - AmazonBedrockFullAccess
+  21. Click "Add permissions"
+
+  (For production, create a custom policy with minimal permissions:
+   dynamodb:PutItem on AircraftPredictions table,
+   bedrock:InvokeModel on claude-3-sonnet model)
+
+TEST THE FUNCTION:
+  22. Go to Test tab
+  23. Create test event with this JSON:
+
+  {
+    "httpMethod": "POST",
+    "body": "{\"image\": \"iVBORw0KGgoAAAANSUhEUg==\"}",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+
+  24. Click "Test"
+  25. Verify response contains aircraft_type, airline, confidence
+      (Will return mock data if Bedrock is not yet configured)

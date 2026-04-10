@@ -1,0 +1,48 @@
+================================================================
+  BEDROCK SETUP — AI MODEL ACCESS
+================================================================
+
+PREREQUISITES:
+  - AWS account in a region that supports Bedrock
+  - Supported regions: us-east-1, us-west-2, eu-west-1, ap-northeast-1
+
+ENABLE MODEL ACCESS:
+
+1. Go to AWS Console → Amazon Bedrock
+2. In the left sidebar, click "Model access"
+3. Click "Manage model access" (or "Modify model access")
+4. Find "Anthropic" section
+5. Check ✅ "Claude 3 Sonnet" (anthropic.claude-3-sonnet-20240229-v1:0)
+6. Click "Request model access"
+7. Accept the End User License Agreement (EULA)
+8. Wait for status to show "Access granted" (usually instant)
+
+VERIFY ACCESS:
+
+9. In Bedrock console → left sidebar → "Chat" under "Playgrounds"
+10. Select model: Claude 3 Sonnet
+11. Upload a test aircraft image
+12. Type: "What aircraft is in this image?"
+13. Verify you get a response
+
+MODEL DETAILS:
+  - Model ID: anthropic.claude-3-sonnet-20240229-v1:0
+  - Supports: Multimodal (text + image)
+  - Input: Base64 image + text prompt
+  - Max tokens: 256 (configured in Lambda)
+  - Pricing: ~$3/M input tokens, ~$15/M output tokens
+
+REGION NOTE:
+  - Ensure your Lambda function is in the SAME REGION as Bedrock
+  - The Lambda code uses Region.US_EAST_1 by default
+  - If using a different region, update REGION in AircraftHandler.java
+
+ALTERNATIVE MODELS (if Claude 3 Sonnet unavailable):
+  - Claude 3 Haiku: anthropic.claude-3-haiku-20240307-v1:0 (cheaper)
+  - Amazon Titan: Does not support multimodal (not recommended)
+  - To switch: update BEDROCK_MODEL_ID in AircraftHandler.java
+
+TROUBLESHOOTING:
+  - "Access denied": Model access not yet granted — check step 8
+  - "Model not found": Wrong region — verify Lambda region matches
+  - Lambda timeout: Increase Lambda timeout to 60+ seconds

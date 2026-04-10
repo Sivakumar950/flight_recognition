@@ -1,0 +1,161 @@
+You are helping me build a full-stack AWS serverless application. Follow all instructions carefully and generate outputs in clearly separated sections.
+
+===== CONTEXT =====
+
+Architecture:
+
+* Frontend: React (Vite) hosted on AWS Amplify
+* API: Amazon API Gateway
+* Backend: AWS Lambda (Java)
+* AI: Amazon Bedrock (multimodal model for image understanding)
+* Database: DynamoDB (store prediction metadata only)
+
+Flow:
+React → API Gateway → Lambda → Bedrock → DynamoDB → Response → React
+
+App functionality:
+
+* User uploads an aircraft image
+* Backend sends image to Bedrock
+* Bedrock returns:
+
+  * aircraft_type
+  * airline
+  * confidence
+* Lambda stores result in DynamoDB
+* Lambda returns result to frontend
+
+Constraints:
+
+* No S3
+* Store only metadata in DynamoDB (no full images)
+* Single Lambda function only
+* Keep everything simple (MVP)
+* Prefer working code over perfect architecture
+
+===== OUTPUT FORMAT REQUIREMENTS =====
+
+You MUST respond in the following sections:
+
+1. FRONTEND CODE
+2. LAMBDA JAVA CODE
+3. AWS SETUP FILES (SEPARATE TEXT FILES)
+4. INTEGRATION STEPS
+
+Each section must be clearly separated with headings.
+
+===== FRONTEND REQUIREMENTS =====
+
+Generate a minimal React (Vite) frontend.
+
+Requirements:
+
+* Single file: App.jsx
+* File upload input
+* Button to upload image
+* Convert image to base64
+* Send POST request to /predict API
+* Display response:
+
+  * aircraft_type
+  * airline
+  * confidence
+
+Also include:
+
+* Instructions to run locally
+* Where to replace API URL
+
+Keep it simple:
+
+* Functional components only
+* No external UI libraries
+
+===== LAMBDA JAVA REQUIREMENTS =====
+
+Generate AWS Lambda code in Java.
+
+Requirements:
+
+* Handle POST request from API Gateway
+
+* Parse JSON body:
+  {
+  "image": "base64string"
+  }
+
+* Call Amazon Bedrock with:
+
+  * base64 image
+  * prompt asking for aircraft_type, airline, confidence
+
+* Parse Bedrock response (JSON)
+
+* Store result in DynamoDB:
+  Table: AircraftPredictions
+  Fields:
+  id (UUID)
+  aircraft_type
+  airline
+  confidence
+  timestamp
+
+* Return JSON response:
+  {
+  "aircraft_type": "",
+  "airline": "",
+  "confidence": ""
+  }
+
+Constraints:
+
+* Use AWS SDK for Java v2
+* Keep code simple and clean
+* If Bedrock integration is complex, MOCK the response and clearly mark it
+
+===== AWS SETUP FILES REQUIREMENTS =====
+
+Generate the following as separate text files:
+
+1. amplify_setup.txt
+2. api_gateway_setup.txt
+3. lambda_setup.txt
+4. dynamodb_setup.txt
+5. bedrock_setup.txt
+
+Each file must contain:
+
+* Step-by-step instructions
+* AWS Management Console steps (click-by-click)
+* Minimal explanation, mostly actionable steps
+
+Do NOT combine them.
+
+===== INTEGRATION STEPS REQUIREMENTS =====
+
+Provide step-by-step instructions for connecting everything:
+
+* How frontend calls API Gateway
+* How API Gateway connects to Lambda
+* How Lambda calls Bedrock
+* How Lambda writes to DynamoDB
+
+Keep it simple and practical.
+
+===== FINAL INSTRUCTION =====
+
+Focus on:
+
+* Speed
+* Simplicity
+* Working MVP
+
+Avoid:
+
+* Overengineering
+* Complex patterns
+* Unnecessary features
+
+If something is complex, simplify or mock it.
+
+Now generate all sections.

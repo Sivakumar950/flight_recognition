@@ -1,0 +1,52 @@
+================================================================
+  AWS AMPLIFY SETUP — FRONTEND HOSTING
+================================================================
+
+PREREQUISITES:
+  - GitHub repository with your frontend code pushed
+  - AWS account with Amplify access
+
+STEPS:
+
+1. Go to AWS Console → AWS Amplify
+2. Click "New app" → "Host web app"
+3. Select "GitHub" as source provider
+4. Authorize AWS Amplify to access your GitHub account
+5. Choose your repository and branch (e.g., main)
+6. Amplify auto-detects Vite/React — verify build settings:
+
+   Build settings:
+   ┌──────────────────────────────────────────┐
+   │ version: 1                               │
+   │ frontend:                                │
+   │   phases:                                │
+   │     preBuild:                            │
+   │       commands:                          │
+   │         - cd frontend                    │
+   │         - npm ci                         │
+   │     build:                               │
+   │       commands:                          │
+   │         - npm run build                  │
+   │   artifacts:                             │
+   │     baseDirectory: frontend/dist         │
+   │     files:                               │
+   │       - '**/*'                           │
+   │   cache:                                 │
+   │     paths:                               │
+   │       - frontend/node_modules/**/*       │
+   └──────────────────────────────────────────┘
+
+7. Click "Save and deploy"
+8. Wait for build + deploy to complete (2-5 minutes)
+9. Copy the Amplify URL (e.g., https://main.abc123.amplifyapp.com)
+
+AFTER DEPLOYMENT:
+  - Update src/App.jsx:
+    Change API_URL from '/predict' to your full API Gateway URL
+    Example: 'https://abc123.execute-api.us-east-1.amazonaws.com/prod/predict'
+  - Push the change to trigger a new Amplify build
+
+CUSTOM DOMAIN (optional):
+  1. In Amplify console → Domain management
+  2. Click "Add domain"
+  3. Follow the DNS verification steps

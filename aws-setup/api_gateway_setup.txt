@@ -1,0 +1,67 @@
+================================================================
+  API GATEWAY SETUP — REST API
+================================================================
+
+STEPS:
+
+1. Go to AWS Console → API Gateway
+2. Click "Create API"
+3. Choose "REST API" (NOT HTTP API) → Click "Build"
+4. Settings:
+   - Protocol: REST
+   - Create new API: "New API"
+   - API name: FlightRecAPI
+   - Endpoint type: Regional
+5. Click "Create API"
+
+CREATE RESOURCE:
+6. Click "Actions" → "Create Resource"
+   - Resource name: predict
+   - Resource path: /predict
+   - Enable API Gateway CORS: ✅ CHECK THIS
+7. Click "Create Resource"
+
+CREATE POST METHOD:
+8. Select /predict resource
+9. Click "Actions" → "Create Method" → Select "POST"
+10. Integration type: Lambda Function
+11. Check "Use Lambda Proxy integration" ✅
+12. Lambda Function: FlightRecHandler (select your Lambda)
+13. Click "Save" → Click "OK" on permission prompt
+
+ENABLE CORS (manual verification):
+14. Select /predict resource
+15. Click "Actions" → "Enable CORS"
+16. Ensure these headers are included:
+    - Access-Control-Allow-Origin: '*'
+    - Access-Control-Allow-Headers: 'Content-Type'
+    - Access-Control-Allow-Methods: 'POST,OPTIONS'
+17. Click "Enable CORS and replace existing CORS headers"
+18. Click "Yes, replace existing values"
+
+DEPLOY API:
+19. Click "Actions" → "Deploy API"
+20. Deployment stage: [New Stage]
+    - Stage name: prod
+21. Click "Deploy"
+22. Copy the Invoke URL:
+    https://{api-id}.execute-api.{region}.amazonaws.com/prod
+
+YOUR ENDPOINT:
+    POST https://{api-id}.execute-api.{region}.amazonaws.com/prod/predict
+
+IMPORTANT:
+  - Update the API_URL in your frontend App.jsx with this URL
+  - If using Amplify, push the change to redeploy
+
+REQUEST BODY FORMAT:
+  {
+    "image": "<base64-encoded-image-string>"
+  }
+
+RESPONSE FORMAT:
+  {
+    "aircraft_type": "Boeing 737-800",
+    "airline": "Southwest Airlines",
+    "confidence": "85"
+  }

@@ -1,0 +1,39 @@
+================================================================
+  DYNAMODB SETUP — PREDICTIONS TABLE
+================================================================
+
+STEPS:
+
+1. Go to AWS Console → DynamoDB
+2. Click "Create table"
+3. Settings:
+   - Table name: AircraftPredictions
+   - Partition key: id (String)
+   - Sort key: (leave empty)
+4. Table settings: Default settings (On-demand mode recommended)
+   - If prompted for capacity mode, select "On-demand"
+   - This avoids provisioned capacity management for MVP
+5. Click "Create table"
+6. Wait for table status to become "Active" (~30 seconds)
+
+TABLE SCHEMA:
+  ┌──────────────┬──────────┬────────────────────────────┐
+  │ Field        │ Type     │ Example                    │
+  ├──────────────┼──────────┼────────────────────────────┤
+  │ id           │ String   │ 550e8400-e29b-41d4-...     │
+  │ aircraft_type│ String   │ Boeing 737-800             │
+  │ airline      │ String   │ Southwest Airlines         │
+  │ confidence   │ String   │ 85                         │
+  │ timestamp    │ String   │ 2026-04-10T05:30:00Z       │
+  └──────────────┴──────────┴────────────────────────────┘
+
+  Note: Only partition key (id) is defined in table creation.
+  Other attributes are added dynamically by Lambda.
+
+VERIFY:
+  7. Go to "Explore table items"
+  8. After running Lambda, you should see prediction records here
+
+COSTS:
+  - On-demand pricing: ~$1.25 per million write requests
+  - For MVP/testing, costs will be negligible
