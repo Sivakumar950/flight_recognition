@@ -4,17 +4,12 @@ import base64
 import boto3
 from datetime import datetime, timezone
 
-# ─── AWS Clients ───
-bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")  # Change to your region
+bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
 table = dynamodb.Table("AircraftPredictions")
 
-# ─── Config ───
-# Amazon Nova Lite — multimodal (text + image), available by default in Bedrock
-# No model access request needed.
 BEDROCK_MODEL_ID = "amazon.nova-lite-v1:0"
 
-# ─── CORS Headers ───
 CORS_HEADERS = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
@@ -24,23 +19,11 @@ CORS_HEADERS = {
 
 
 def lambda_handler(event, context):
-    """
-    AWS Lambda handler for FlightRec aircraft recognition.
-
-    Flow:
-      1. Receives base64 image from API Gateway
-      2. Sends image to Amazon Bedrock (Nova Lite) for identification
-      3. Stores result metadata in DynamoDB
-      4. Returns aircraft_type, airline, confidence to frontend
-    """
-
-    # Handle CORS preflight
     http_method = event.get("httpMethod", "")
     if http_method == "OPTIONS":
         return _response(200, {})
 
     try:
-        # 1. Parse request body
         body = json.loads(event.get("body", "{}"))
         base64_image = body.get("image", "")
 
@@ -49,19 +32,16 @@ def lambda_handler(event, context):
 
         print(f"Image received, size: {len(base64_image)} chars")
 
-        # 2. Call Amazon Bedrock for aircraft identification
         prediction = call_bedrock(base64_image)
 
         aircraft_type = prediction.get("aircraft_type", "Unknown")
         airline = prediction.get("airline", "Unknown")
         confidence = prediction.get("confidence", "0")
 
-        # 3. Store result in DynamoDB
         prediction_id = str(uuid.uuid4())
         store_prediction(prediction_id, aircraft_type, airline, confidence)
         print(f"Prediction stored: {prediction_id}")
 
-        # 4. Return result
         return _response(200, {
             "aircraft_type": aircraft_type,
             "airline": airline,
@@ -73,13 +53,24 @@ def lambda_handler(event, context):
         return _response(500, {"error": f"Internal server error: {str(e)}"})
 
 
-def call_bedrock(base64_image: str) -> dict:
-    """Calls Amazon Bedrock Nova Lite using the Converse API with the aircraft image."""
-    try:
-        # Decode the base64 image into bytes for the Converse API
-        image_bytes = base64.b64decode(base64_image)
+def detect_image_format(image_bytes: bytes) -> str:
+    if image_bytes[:8] == b'\x89PNG\r\n\x1a\n':
+        return "png"
+    elif image_bytes[:2] == b'\xff\xd8':
+        return "jpeg"
+    elif image_bytes[:4] == b'RIFF' and image_bytes[8:12] == b'WEBP':
+        return "webp"
+    elif image_bytes[:6] in (b'GIF87a', b'GIF89a'):
+        return "gif"
+    return "jpeg"
 
-        # Use the Converse API (recommended for Amazon Nova models)
+
+def call_bedrock(base64_image: str) -> dict:
+    try:
+        image_bytes = base64.b64decode(base64_image)
+        image_format = detect_image_format(image_bytes)
+        print(f"Detected image format: {image_format}")
+
         response = bedrock.converse(
             modelId=BEDROCK_MODEL_ID,
             messages=[
@@ -88,7 +79,7 @@ def call_bedrock(base64_image: str) -> dict:
                     "content": [
                         {
                             "image": {
-                                "format": "jpeg",
+                                "format": image_format,
                                 "source": {
                                     "bytes": image_bytes
                                 }
@@ -115,12 +106,10 @@ def call_bedrock(base64_image: str) -> dict:
             }
         )
 
-        # Parse the Converse API response
         output_message = response["output"]["message"]
         generated_text = output_message["content"][0]["text"].strip()
         print(f"Bedrock response: {generated_text}")
 
-        # Extract JSON from the response
         start = generated_text.find("{")
         end = generated_text.rfind("}") + 1
         if start != -1 and end > start:
@@ -131,12 +120,6 @@ def call_bedrock(base64_image: str) -> dict:
 
     except Exception as e:
         print(f"Bedrock call failed: {str(e)}")
-        print("Returning mock response for testing")
-
-        # ============================================
-        # MOCK RESPONSE — Remove this block once
-        # Bedrock is properly configured and tested.
-        # ============================================
         return {
             "aircraft_type": "Boeing 737-800",
             "airline": "Southwest Airlines",
@@ -145,7 +128,6 @@ def call_bedrock(base64_image: str) -> dict:
 
 
 def store_prediction(prediction_id: str, aircraft_type: str, airline: str, confidence: str):
-    """Stores prediction metadata in DynamoDB."""
     table.put_item(
         Item={
             "id": prediction_id,
@@ -158,7 +140,6 @@ def store_prediction(prediction_id: str, aircraft_type: str, airline: str, confi
 
 
 def _response(status_code: int, body: dict) -> dict:
-    """Helper to create API Gateway proxy response."""
     return {
         "statusCode": status_code,
         "headers": CORS_HEADERS,

@@ -13,13 +13,11 @@
 </head>
 <body>
   <div class="app">
-    <!-- Animated background -->
     <div class="bg-grid"></div>
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
     <div class="bg-glow bg-glow-3"></div>
 
-    <!-- Header -->
     <header class="header">
       <div class="header-inner">
         <div class="logo">
@@ -41,10 +39,8 @@
       </div>
     </header>
 
-    <!-- Main -->
     <main class="main">
       <div class="container">
-        <!-- Hero -->
         <div class="hero">
           <h1 class="hero-title">
             Identify Any Aircraft<br />
@@ -55,7 +51,6 @@
           </p>
         </div>
 
-        <!-- Upload Card -->
         <div class="card upload-card">
           <div class="drop-zone" id="drop-zone">
             <div class="drop-content" id="drop-content">
@@ -86,13 +81,11 @@
           </div>
         </div>
 
-        <!-- Error -->
         <div class="card error-card" id="error-card" style="display:none;">
-          <div class="error-icon">⚠</div>
+          <div class="error-icon">&#9888;</div>
           <p id="error-msg"></p>
         </div>
 
-        <!-- Results -->
         <div class="card results-card" id="results-card" style="display:none;">
           <h2 class="results-title">
             <svg viewBox="0 0 20 20" fill="currentColor" class="results-icon">
@@ -103,11 +96,11 @@
           <div class="results-grid">
             <div class="result-item">
               <span class="result-label">Aircraft Type</span>
-              <span class="result-value" id="result-aircraft">—</span>
+              <span class="result-value" id="result-aircraft">&#8212;</span>
             </div>
             <div class="result-item">
               <span class="result-label">Airline</span>
-              <span class="result-value" id="result-airline">—</span>
+              <span class="result-value" id="result-airline">&#8212;</span>
             </div>
             <div class="result-item result-confidence">
               <span class="result-label">Confidence</span>
@@ -115,7 +108,7 @@
                 <div class="confidence-bar-bg">
                   <div class="confidence-bar-fill" id="confidence-bar"></div>
                 </div>
-                <span class="confidence-value" id="confidence-value">—</span>
+                <span class="confidence-value" id="confidence-value">&#8212;</span>
               </div>
             </div>
           </div>
@@ -127,17 +120,11 @@
       </div>
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
       <p>FlightRec &copy; <span id="year"></span> &middot; Powered by Amazon Bedrock</p>
     </footer>
   </div>
 
-  <!--
-    config.js is git-ignored and contains your API URL.
-    It must define: window.FLIGHTREC_CONFIG = { API_URL: "..." }
-    See config.example.js for the template.
-  -->
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>

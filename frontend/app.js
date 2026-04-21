@@ -1,16 +1,9 @@
-/**
- * FlightRec — Aircraft Recognition App
- * Pure vanilla JavaScript (no frameworks, no build tools)
- */
-
 (function () {
   'use strict';
 
-  // ─── Config ───
   const CONFIG = window.FLIGHTREC_CONFIG || {};
   const API_URL = CONFIG.API_URL || '/predict';
 
-  // ─── DOM Elements ───
   const dropZone = document.getElementById('drop-zone');
   const dropContent = document.getElementById('drop-content');
   const previewContainer = document.getElementById('preview-container');
@@ -29,14 +22,11 @@
   const historyHint = document.getElementById('history-hint');
   const yearSpan = document.getElementById('year');
 
-  // ─── State ───
   let selectedFile = null;
   let isLoading = false;
 
-  // ─── Init ───
   yearSpan.textContent = new Date().getFullYear();
 
-  // ─── File Handling ───
   function handleFile(file) {
     if (!file || !file.type.startsWith('image/')) {
       showError('Please select a valid image file.');
@@ -63,7 +53,6 @@
     reader.readAsDataURL(file);
   }
 
-  // ─── Drag & Drop ───
   dropZone.addEventListener('click', function () {
     fileInput.click();
   });
@@ -101,7 +90,6 @@
     }
   });
 
-  // ─── Analyze ───
   analyzeBtn.addEventListener('click', function () {
     if (!selectedFile || isLoading) return;
     uploadAndAnalyze();
@@ -147,7 +135,6 @@
     return new Promise(function (resolve, reject) {
       const reader = new FileReader();
       reader.onloadend = function () {
-        // Remove the data:image/...;base64, prefix
         const base64 = reader.result.split(',')[1];
         resolve(base64);
       };
@@ -156,7 +143,6 @@
     });
   }
 
-  // ─── Results Display ───
   function showResults(data) {
     var aircraft = data.aircraft_type || 'Unknown';
     var airline = data.airline || 'Unknown';
@@ -165,7 +151,6 @@
     resultAircraft.textContent = aircraft;
     resultAirline.textContent = airline;
 
-    // Confidence bar + color
     var color = confidence >= 80 ? '#00e676' : confidence >= 50 ? '#ffab00' : '#ff5252';
     var label = confidence >= 80 ? 'High' : confidence >= 50 ? 'Medium' : 'Low';
 
@@ -180,7 +165,6 @@
     historyHint.style.display = '';
   }
 
-  // ─── Error ───
   function showError(msg) {
     errorMsg.textContent = msg;
     errorCard.style.display = '';
@@ -195,7 +179,6 @@
     historyHint.style.display = 'none';
   }
 
-  // ─── Reset ───
   resetBtn.addEventListener('click', function () {
     selectedFile = null;
     fileInput.value = '';
